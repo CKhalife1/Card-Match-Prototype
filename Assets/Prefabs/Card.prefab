@@ -88,6 +88,7 @@ GameObject:
   - component: {fileID: 7836910053444660446}
   - component: {fileID: 147334035152819783}
   - component: {fileID: 4092831417515313646}
+  - component: {fileID: 7653527823772931381}
   m_Layer: 5
   m_Name: Card
   m_TagString: Untagged
@@ -228,6 +229,18 @@ MonoBehaviour:
   isFlipped: 0
   isMatched: 0
   flipDuration: 0.3
+--- !u!225 &7653527823772931381
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2320291040976891171}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &3498696964358128128
 GameObject:
   m_ObjectHideFlags: 0
@@ -282,7 +295,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &8965108178323280700
 RectTransform:
   m_ObjectHideFlags: 0

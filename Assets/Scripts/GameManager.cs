@@ -10,6 +10,12 @@ public class GameManager : MonoBehaviour
     public Transform gridParent;
     public TextMeshProUGUI scoreText;
     public Sprite[] cardFaceSprites;
+    public GameObject winPanel;
+    public AudioSource audioSource;
+    public AudioClip flipClip;
+    public AudioClip matchClip;
+    public AudioClip noMatchClip;
+
 
     private Card firstFlipped;
     private Card secondFlipped;
@@ -35,6 +41,9 @@ public class GameManager : MonoBehaviour
         {
             Card card = cardPool.Dequeue();
             card.gameObject.SetActive(true);
+            // Always reset visibility when reusing a card!
+            CanvasGroup group = card.GetComponent<CanvasGroup>();
+            if (group != null) group.alpha = 1;
             return card;
         }
         else
@@ -74,7 +83,7 @@ public class GameManager : MonoBehaviour
             if (ids[i] < cardFaceSprites.Length)
                 card.frontImage.sprite = cardFaceSprites[ids[i]];
             card.isMatched = false;
-            card.SetFaceDown();
+            card.SetFaceDown(true);
             cards.Add(card);
         }
     }
@@ -103,9 +112,11 @@ public class GameManager : MonoBehaviour
             firstFlipped.SetMatched();
             secondFlipped.SetMatched();
             score += 10;
+            PlayMatchSound();
         }
         else
         {
+            PlayNoMatchSound();
             firstFlipped.SetFaceDown();
             secondFlipped.SetFaceDown();
         }
@@ -113,10 +124,39 @@ public class GameManager : MonoBehaviour
         firstFlipped = null;
         secondFlipped = null;
         isInputLocked = false;
+
+        if (cards.TrueForAll(card => card.isMatched))
+        {
+            winPanel.SetActive(true);
+            isInputLocked = true;
+        }
     }
 
     void UpdateScore() { scoreText.text = $"Score: {score}"; }
+
+    public void RestartGame()
+    {
+        winPanel.SetActive(false);
+        isInputLocked = false;
+        GenerateGrid(4, 4); // or your current grid size
+        score = 0;
+        UpdateScore();
+    }
+
+    public void PlayFlipSound()
+    {
+        if (flipClip != null) audioSource.PlayOneShot(flipClip);
+    }
+    public void PlayMatchSound()
+    {
+        if (matchClip != null) audioSource.PlayOneShot(matchClip);
+    }
+    public void PlayNoMatchSound()
+    {
+        if (noMatchClip != null) audioSource.PlayOneShot(noMatchClip);
+    }
 }
+
 
 public static class ListExtensions
 {

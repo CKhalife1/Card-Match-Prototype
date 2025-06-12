@@ -5,19 +5,28 @@ using System.Collections;
 public class Card : MonoBehaviour
 {
     public int cardId;
-    public RectTransform cardVisual;
+    public RectTransform cardVisual;    // Assign this to CardVisual child
     public Image frontImage;
     public Image backImage;
     public bool isFlipped = false;
     public bool isMatched = false;
     public float flipDuration = 0.3f;
     private bool isAnimating = false;
+    private CanvasGroup group;
+
+    void Awake()
+    {
+        group = GetComponent<CanvasGroup>();
+        if (group == null)
+            group = gameObject.AddComponent<CanvasGroup>(); // Fallback for old instances
+    }
 
     public void OnCardClicked()
     {
         if (isMatched || isAnimating) return;
         if (GameManager.Instance.IsInputLocked) return;
         if (isFlipped) return;
+        GameManager.Instance.PlayFlipSound();
         Flip();
         GameManager.Instance.OnCardFlipped(this);
     }
@@ -35,7 +44,7 @@ public class Card : MonoBehaviour
         Quaternion startRot = cardVisual.localRotation;
         Quaternion midRot = Quaternion.Euler(0, 90, 0);
 
-        // Rotate to side (0° → 90°)
+        // Rotate to 90°
         while (time < flipDuration / 2)
         {
             float t = time / (flipDuration / 2);
@@ -50,9 +59,9 @@ public class Card : MonoBehaviour
         frontImage.gameObject.SetActive(isFlipped);
         backImage.gameObject.SetActive(!isFlipped);
 
-        // Finish rotation (90° → 0° or 180°)
+        // Rotate back to 0° or 180°
         time = 0f;
-        Quaternion endRot = Quaternion.Euler(0, isFlipped ? 0 : 180, 0);
+        Quaternion endRot = Quaternion.Euler(0, 0, 0);
         while (time < flipDuration / 2)
         {
             float t = time / (flipDuration / 2);
@@ -61,6 +70,11 @@ public class Card : MonoBehaviour
             yield return null;
         }
         cardVisual.localRotation = endRot;
+
+        // Always set correct images at the end of the animation (safety!)
+        frontImage.gameObject.SetActive(isFlipped);
+        backImage.gameObject.SetActive(!isFlipped);
+
         isAnimating = false;
     }
 
@@ -73,8 +87,6 @@ public class Card : MonoBehaviour
     private IEnumerator FadeOutAndDisable()
     {
         float fadeTime = 0.3f;
-        CanvasGroup group = GetComponent<CanvasGroup>();
-        if (group == null) group = gameObject.AddComponent<CanvasGroup>();
         float startAlpha = group.alpha;
         for (float t = 0; t < fadeTime; t += Time.deltaTime)
         {
@@ -85,20 +97,26 @@ public class Card : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    public void SetFaceDown()
+    public void SetFaceDown(bool instant = false)
     {
-        if (isFlipped && !isAnimating)
+        isMatched = false;
+        if (instant)
         {
-            Flip(); // will animate to face down
-        }
-        else
-        {
+            // Instantly reset visuals for restart!
             isFlipped = false;
+            StopAllCoroutines();
+            isAnimating = false;
             frontImage.gameObject.SetActive(false);
             backImage.gameObject.SetActive(true);
             cardVisual.localRotation = Quaternion.Euler(0, 0, 0);
-            CanvasGroup group = GetComponent<CanvasGroup>();
             if (group != null) group.alpha = 1;
+            gameObject.SetActive(true);
+        }
+        else
+        {
+            // During gameplay, animate flip if card is face up
+            if (isFlipped && !isAnimating)
+                Flip();
         }
     }
 
@@ -106,7 +124,7 @@ public class Card : MonoBehaviour
     {
         if (!isFlipped && !isAnimating)
         {
-            Flip(); // will animate to face up
+            Flip(); // Animate flip to face up
         }
         else
         {
@@ -114,8 +132,7 @@ public class Card : MonoBehaviour
             frontImage.gameObject.SetActive(true);
             backImage.gameObject.SetActive(false);
             cardVisual.localRotation = Quaternion.Euler(0, 0, 0);
-            CanvasGroup group = GetComponent<CanvasGroup>();
-            if (group != null) group.alpha = 1;
+            group.alpha = 1;
         }
     }
 }
